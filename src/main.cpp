@@ -1,4 +1,4 @@
-#include "task_manager.hpp"
+#include "task_manager.h"
 
 #include <iostream>
 #include <limits>
@@ -59,7 +59,14 @@ std::string readLine() {
 
 int main(int argc, char* argv[]) {
     const std::string filename = (argc > 1) ? argv[1] : "tasks.txt";
-    std::vector<Task> tasks = loadTasks(filename);
+    std::vector<Task> tasks;
+
+    try {
+        tasks = loadTasks(filename);
+    } catch (const std::exception& e) {
+        std::cout << "Ошибка: " << e.what() << '\n';
+        return 1;
+    }
 
     int choice = -1;
 
@@ -101,7 +108,7 @@ int main(int argc, char* argv[]) {
                         saveTasks(filename, tasks);
                         std::cout << "Задача удалена.\n";
                     } else {
-                        std::cout << "Задача с таким ID не найдена.\n";
+                        throw std::invalid_argument("Задача с таким ID не найдена.");
                     }
                     break;
                 }
@@ -126,7 +133,7 @@ int main(int argc, char* argv[]) {
                         saveTasks(filename, tasks);
                         std::cout << "Задача изменена.\n";
                     } else {
-                        std::cout << "Задача с таким ID не найдена.\n";
+                        throw std::invalid_argument("Задача с таким ID не найдена.");
                     }
                     break;
                 }
@@ -138,7 +145,7 @@ int main(int argc, char* argv[]) {
                         saveTasks(filename, tasks);
                         std::cout << "Задача отмечена как выполненная.\n";
                     } else {
-                        std::cout << "Задача с таким ID не найдена.\n";
+                        throw std::invalid_argument("Задача с таким ID не найдена.");
                     }
                     break;
                 }
@@ -187,7 +194,7 @@ int main(int argc, char* argv[]) {
                     break;
                 }
                 default: {
-                    std::cout << "Неизвестный пункт меню. Попробуйте снова.\n";
+                    throw std::invalid_argument("Неизвестный пункт меню. Попробуйте снова.");
                     break;
                 }
             }

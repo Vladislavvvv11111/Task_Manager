@@ -1,10 +1,20 @@
-#include "task_manager.hpp"
+#include "task_manager.h"
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+
+namespace {
+
+void validatePriority(int priority) {
+    if (priority < 1 || priority > 3) {
+        throw std::invalid_argument("Важность должна быть от 1 до 3.");
+    }
+}
+
+} // namespace
 
 std::vector<Task> loadTasks(const std::string& filename) {
     std::vector<Task> tasks;
@@ -16,7 +26,11 @@ std::vector<Task> loadTasks(const std::string& filename) {
     }
 
     std::string line;
+    int lineNumber = 0;
+
     while (std::getline(file, line)) {
+        ++lineNumber;
+
         if (line.empty()) {
             continue;
         }
@@ -24,17 +38,37 @@ std::vector<Task> loadTasks(const std::string& filename) {
         std::stringstream ss(line);
         std::string idStr, description, deadline, priorityStr, doneStr;
 
-        std::getline(ss, idStr, ';');
-        std::getline(ss, description, ';');
-        std::getline(ss, deadline, ';');
-        std::getline(ss, priorityStr, ';');
-        std::getline(ss, doneStr, ';');
+        if (!std::getline(ss, idStr, ';') ||
+            !std::getline(ss, description, ';') ||
+            !std::getline(ss, deadline, ';') ||
+            !std::getline(ss, priorityStr, ';') ||
+            !std::getline(ss, doneStr, ';')) {
+            throw std::runtime_error("Некорректный формат файла задач в строке " +
+                                     std::to_string(lineNumber) + ".");
+        }
+
+        if (doneStr != "0" && doneStr != "1") {
+            throw std::runtime_error("Некорректный статус задачи в строке " +
+                                     std::to_string(lineNumber) + ".");
+        }
 
         Task task;
-        task.id = std::stoi(idStr);
+        try {
+            task.id = std::stoi(idStr);
+            task.priority = std::stoi(priorityStr);
+        } catch (const std::exception&) {
+            throw std::runtime_error("Некорректные числовые данные в строке " +
+                                     std::to_string(lineNumber) + ".");
+        }
+
+        try {
+            validatePriority(task.priority);
+        } catch (const std::invalid_argument&) {
+            throw std::runtime_error("Некорректная важность задачи в строке " +
+                                     std::to_string(lineNumber) + ".");
+        }
         task.description = description;
         task.deadline = deadline;
-        task.priority = std::stoi(priorityStr);
         task.done = (doneStr == "1");
 
         tasks.push_back(task);
@@ -61,6 +95,8 @@ void saveTasks(const std::string& filename, const std::vector<Task>& tasks) {
 
 void addTask(std::vector<Task>& tasks, const std::string& description,
              const std::string& deadline, int priority) {
+    validatePriority(priority);
+
     int newId = 1;
 
     // Находим максимальный существующий id и берём следующий за ним.
@@ -102,6 +138,8 @@ bool markTaskDone(std::vector<Task>& tasks, int id) {
 
 bool editTask(std::vector<Task>& tasks, int id, const std::string& newDescription,
               const std::string& newDeadline, int newPriority) {
+    validatePriority(newPriority);
+
     for (auto& task : tasks) {
         if (task.id == id) {
             task.description = newDescription;
@@ -127,6 +165,8 @@ std::vector<Task> filterByKeyword(const std::vector<Task>& tasks, const std::str
 }
 
 std::vector<Task> filterByPriority(const std::vector<Task>& tasks, int priority) {
+    validatePriority(priority);
+
     std::vector<Task> result;
 
     for (const auto& task : tasks) {

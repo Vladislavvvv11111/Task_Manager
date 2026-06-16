@@ -1,5 +1,5 @@
-#ifndef TASK_MANAGER_HPP
-#define TASK_MANAGER_HPP
+#ifndef TASK_MANAGER_H
+#define TASK_MANAGER_H
 
 #include <string>
 #include <vector>
@@ -138,4 +138,4 @@ void printTask(const Task& task);
  */
 void printTasks(const std::vector<Task>& tasks);
 
-#endif // TASK_MANAGER_HPP
+#endif // TASK_MANAGER_H
